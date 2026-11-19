@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found – 404{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card card-custom p-5 my-5">
+                <i class="bi bi-question-circle text-electric fs-1 mb-3"></i>
+                <h1 class="display-4 fw-bold text-white mono mb-2">404</h1>
+                <h4 class="text-white mb-3">Resource Not Found</h4>
+                <p class="text-secondary mb-4">The requested page or resource could not be found on the ProductGuard server.</p>
+                <a href="{{ url_for('main.index') }}" class="btn btn-electric px-4 py-2">
+                    <i class="bi bi-house me-2"></i>Return Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

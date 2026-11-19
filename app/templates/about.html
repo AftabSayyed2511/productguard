@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}About & Methodology – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <span class="badge bg-electric text-navy px-3 py-2 fw-bold text-uppercase mb-2">Technical Whitepaper & Scope</span>
+                <h1 class="fw-bold text-white mb-3">About ProductGuard & AI Methodology</h1>
+                <p class="lead text-secondary">
+                    Engineering a computer vision framework for visual counterfeit detection via transfer learning and high-dimensional packaging embedding comparison.
+                </p>
+            </div>
+
+            <!-- Pipeline Card -->
+            <div class="card card-custom p-4 p-md-5 mb-4 shadow">
+                <h3 class="fw-bold text-white mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-diagram-3 text-electric"></i> Computer Vision Pipeline Architecture
+                </h3>
+                <p class="text-secondary leading-relaxed">
+                    Counterfeit products frequently present micro-discrepancies in packaging typography, brand insignia alignment, aspect ratio, color palettes, and finish texture. ProductGuard applies deep convolutional feature representation to capture these visual characteristics.
+                </p>
+
+                <div class="bg-navy p-4 rounded border border-secondary my-4">
+                    <h5 class="text-white fw-bold mb-3"><i class="bi bi-gear-wide-connected text-electric me-2"></i> Mathematical Formulation</h5>
+                    <p class="text-secondary small mb-2">
+                        1. <strong>Pre-processing</strong>: The uploaded image is decoded, verified against JPEG/PNG file headers, transformed to standard RGB color space, and rescaled using bilinear interpolation to $224 \times 224 \times 3$.
+                    </p>
+                    <p class="text-secondary small mb-2">
+                        2. <strong>Feature Space Mapping</strong>: The input tensor passes through the truncated MobileNetV2 backbone (pre-trained on ImageNet-1K). The global average pooling layer produces a raw vector $\mathbf{f} \in \mathbb{R}^{1280}$.
+                    </p>
+                    <p class="text-secondary small mb-2">
+                        3. <strong>$L_2$ Vector Normalization</strong>:
+                        $$\mathbf{e} = \frac{\mathbf{f}}{\|\mathbf{f}\|_2} = \frac{\mathbf{f}}{\sqrt{\sum_{i=1}^{1280} f_i^2}}$$
+                    </p>
+                    <p class="text-secondary small mb-0">
+                        4. <strong>Cosine Similarity Computation</strong>: Given the query embedding $\mathbf{e}_q$ and candidate verified reference embedding $\mathbf{e}_r$, the cosine similarity equals their inner dot product:
+                        $$S(\mathbf{e}_q, \mathbf{e}_r) = \mathbf{e}_q \cdot \mathbf{e}_r = \sum_{i=1}^{1280} e_{q,i} \cdot e_{r,i}$$
+                    </p>
+                </div>
+
+                <h4 class="fw-bold text-white mb-3">Decision Threshold Calibration</h4>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover border border-secondary align-middle">
+                        <thead>
+                            <tr class="text-electric">
+                                <th>Assessment Status</th>
+                                <th>Cosine Score</th>
+                                <th>Technical Interpretation</th>
+                                <th>Recommended Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-similarity-high">High Similarity</span></td>
+                                <td class="mono fw-bold text-success">&ge; 82%</td>
+                                <td class="small text-secondary">Strong visual alignment with verified manufacturer packaging standards.</td>
+                                <td class="small text-secondary">Visual packaging verification passed.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-similarity-moderate">Moderate Similarity</span></td>
+                                <td class="mono fw-bold text-warning">65% – 81.9%</td>
+                                <td class="small text-secondary">General structural resemblance detected, but significant variations exist in print, fonts, or lighting.</td>
+                                <td class="small text-secondary">Secondary inspection of batch numbers, seals, and holographic tags required.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-similarity-low">Low Similarity</span></td>
+                                <td class="mono fw-bold text-danger">&lt; 65%</td>
+                                <td class="small text-secondary">Substantial divergence from manufacturer packaging templates. High suspicion of counterfeit.</td>
+                                <td class="small text-secondary">Flagged as suspicious. Avoid purchasing or dispensing.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-similarity-insufficient">Insufficient Data</span></td>
+                                <td class="mono fw-bold text-muted">&lt; 40% / None</td>
+                                <td class="small text-secondary">No eligible verified reference products available in the specified category.</td>
+                                <td class="small text-secondary">Admin must ingest genuine manufacturer samples.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Crucial Limitations Alert -->
+            <div class="alert alert-warning bg-navy border-warning p-4 shadow-sm">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="bi bi-shield-exclamation text-warning fs-2 mt-1"></i>
+                    <div>
+                        <h5 class="fw-bold text-white mb-2">Scientific Disclaimer: Visual Similarity vs. Authenticity</h5>
+                        <p class="text-secondary small mb-2">
+                            ProductGuard operates strictly as a <strong>visual packaging verification system</strong>. It is designed to assist consumers, customs officials, and retail audits by catching packaging discrepancies, misprints, font anomalies, and unauthorized replicas.
+                        </p>
+                        <p class="text-secondary small mb-0">
+                            <strong>Important</strong>: Visual similarity is not an absolute guarantee of chemical, pharmacological, or electronic authenticity. Sophisticated counterfeits may reuse discarded genuine containers ("refilled goods"), and genuine products may exhibit slight color variations due to regional manufacturing batches or extreme lighting conditions. Always combine visual AI verification with physical batch checks.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Year Project Info -->
+            <div class="card card-custom p-4 text-center mt-4">
+                <h6 class="text-electric text-uppercase fw-bold mb-1">Academic Context</h6>
+                <h5 class="text-white fw-bold mb-2">Final Year Engineering Capstone Project</h5>
+                <p class="text-secondary small mb-0">
+                    Engineered with Flask, TensorFlow Keras (MobileNetV2), OpenCV, SQLAlchemy, Bootstrap 5, and Chart.js as an enterprise-grade full-stack computer vision application.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

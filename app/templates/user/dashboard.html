@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard – {{ APP_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Dashboard Layout ──────────────────────────────────────────────────── */
+.dashboard-header {
+    background: linear-gradient(135deg, #070D1E 0%, #0B1528 60%, #0d1f3c 100%);
+    border-bottom: 1px solid rgba(0, 210, 255, 0.15);
+    padding: 2.5rem 0 2rem;
+}
+
+/* ── KPI Cards ─────────────────────────────────────────────────────────── */
+.kpi-card {
+    background: rgba(11, 21, 40, 0.8);
+    border: 1px solid rgba(0, 210, 255, 0.12);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: border-color 0.25s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(0,210,255,0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+.kpi-card:hover {
+    border-color: rgba(0, 210, 255, 0.35);
+    transform: translateY(-2px);
+}
+.kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+.kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+}
+.kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* KPI accent colours */
+.kpi-total  .kpi-icon { background: rgba(0,210,255,0.15); color: #00D2FF; }
+.kpi-high   .kpi-icon { background: rgba(34,197,94,0.15); color: #22c55e; }
+.kpi-mod    .kpi-icon { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.kpi-low    .kpi-icon { background: rgba(239,68,68,0.15);  color: #ef4444; }
+.kpi-insuf  .kpi-icon { background: rgba(100,116,139,0.15);color: #94a3b8; }
+
+/* ── Chart cards ───────────────────────────────────────────────────────── */
+.chart-card {
+    background: rgba(11, 21, 40, 0.85);
+    border: 1px solid rgba(0, 210, 255, 0.10);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+.chart-card-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin-bottom: 1.25rem;
+}
+.chart-container {
+    position: relative;
+}
+
+/* ── Assessment badge colours ──────────────────────────────────────────── */
+.badge-high       { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.badge-moderate   { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);}
+.badge-low        { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.badge-insufficient{ background: rgba(100,116,139,0.15);color: #94a3b8;border: 1px solid rgba(100,116,139,0.3);}
+
+/* ── Recent scans table ────────────────────────────────────────────────── */
+.scan-table th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06) !important;
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+}
+.scan-table td {
+    color: #cbd5e1;
+    border-color: rgba(255,255,255,0.05) !important;
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}
+.scan-table tr:hover td { background: rgba(0,210,255,0.03); }
+
+/* ── Empty state ───────────────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #64748b;
+}
+.empty-state i { font-size: 3rem; color: #1e3a5f; }
+
+/* ── Donut centre label ────────────────────────────────────────────────── */
+.donut-wrapper {
+    position: relative;
+}
+.donut-centre {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -65%);
+    text-align: center;
+    pointer-events: none;
+}
+.donut-centre .big-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+}
+.donut-centre .small-lbl {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════════
+     DASHBOARD HEADER
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h1 class="fw-bold text-white mb-1 fs-3">
+                    <i class="bi bi-speedometer2 text-electric me-2"></i>
+                    Welcome back, <span class="text-electric">{{ current_user.full_name.split()[0] }}</span>
+                </h1>
+                <p class="text-muted mb-0 small">
+                    Your product verification activity at a glance &mdash;
+                    all data sourced live from your scan records.
+                </p>
+            </div>
+            <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric text-navy fw-semibold px-4">
+                <i class="bi bi-qr-code-scan me-2"></i>New Scan
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     LOADING SPINNER (hidden once JS loads)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div id="dashboard-loading" class="container py-5 text-center">
+    <div class="spinner-border text-electric" style="width:3rem;height:3rem;"></div>
+    <p class="text-muted mt-3 small">Fetching your scan statistics…</p>
+</div>
+
+<!-- Error banner (hidden by default) -->
+<div id="dashboard-error" class="container mt-4 alert alert-danger d-none" role="alert"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MAIN DASHBOARD CONTENT (shown after JS fetch)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div id="dashboard-content" class="d-none">
+
+    <!-- ── KPI Row ──────────────────────────────────────────────────────── -->
+    <section class="container py-4">
+        <div class="row g-3">
+
+            <!-- Total Scans -->
+            <div class="col-6 col-md-4 col-lg-2-4">
+                <div class="kpi-card kpi-total h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="kpi-value" id="kpi-total">{{ stats.total_scans }}</div>
+                            <div class="kpi-label">Total Scans</div>
+                        </div>
+                        <div class="kpi-icon"><i class="bi bi-collection"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- High Similarity -->
+            <div class="col-6 col-md-4 col-lg-2-4">
+                <div class="kpi-card kpi-high h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="kpi-value text-success" id="kpi-high">{{ stats.high_similarity }}</div>
+                            <div class="kpi-label">High Similarity</div>
+                        </div>
+                        <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderate Similarity -->
+            <div class="col-6 col-md-4 col-lg-2-4">
+                <div class="kpi-card kpi-mod h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="kpi-value text-warning" id="kpi-moderate">{{ stats.moderate_similarity }}</div>
+                            <div class="kpi-label">Moderate</div>
+                        </div>
+                        <div class="kpi-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Similarity -->
+            <div class="col-6 col-md-4 col-lg-2-4">
+                <div class="kpi-card kpi-low h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="kpi-value text-danger" id="kpi-low">{{ stats.low_similarity }}</div>
+                            <div class="kpi-label">Low Similarity</div>
+                        </div>
+                        <div class="kpi-icon"><i class="bi bi-x-circle-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insufficient Data -->
+            <div class="col-6 col-md-4 col-lg-2-4">
+                <div class="kpi-card kpi-insuf h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="kpi-value text-secondary" id="kpi-insufficient">{{ stats.insufficient_data }}</div>
+                            <div class="kpi-label">Insufficient Data</div>
+                        </div>
+                        <div class="kpi-icon"><i class="bi bi-question-circle-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── Charts Row ────────────────────────────────────────────────────── -->
+    <section class="container pb-4">
+        <div class="row g-4">
+
+            <!-- Assessment Distribution Donut -->
+            <div class="col-lg-4">
+                <div class="chart-card h-100">
+                    <p class="chart-card-title"><i class="bi bi-pie-chart me-2 text-electric"></i>Assessment Distribution</p>
+                    <div class="donut-wrapper">
+                        <div class="chart-container" style="height:260px;">
+                            <canvas id="donutChart"></canvas>
+                        </div>
+                        <div class="donut-centre">
+                            <div class="big-num">{{ stats.total_scans }}</div>
+                            <div class="small-lbl" id="donut-centre-label">total scans</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 30-Day Activity Line -->
+            <div class="col-lg-8">
+                <div class="chart-card h-100">
+                    <p class="chart-card-title"><i class="bi bi-graph-up me-2 text-electric"></i>Scan Activity — Last 30 Days</p>
+                    <div class="chart-container" style="height:260px;">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Bar Chart -->
+            <div class="col-12">
+                <div class="chart-card">
+                    <p class="chart-card-title"><i class="bi bi-bar-chart me-2 text-electric"></i>Scans by Category</p>
+                    <div class="chart-container" style="height:200px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── Recent Scan Activity Feed ────────────────────────────────────── -->
+    <section class="container pb-5">
+        <div class="chart-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="chart-card-title mb-0">
+                    <i class="bi bi-clock-history me-2 text-electric"></i>Recent Scan Activity
+                </p>
+                <a href="{{ url_for('scan.history') }}" class="btn btn-sm btn-outline-secondary text-muted">
+                    View all <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            {% if recent_scans %}
+            <div class="table-responsive">
+                <table class="table scan-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Uploaded Image</th>
+                            <th>Matched Product</th>
+                            <th>Category</th>
+                            <th>Similarity</th>
+                            <th>Assessment</th>
+                            <th>Scanned</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scan in recent_scans %}
+                        <tr>
+                            <td>
+                                <img
+                                    src="{{ url_for('static', filename=scan.uploaded_image_path) }}"
+                                    alt="Scan thumbnail"
+                                    width="48" height="48"
+                                    class="rounded object-fit-cover border border-secondary"
+                                    onerror="this.src='{{ url_for('static', filename='img/placeholder.png') }}'"
+                                >
+                            </td>
+                            <td>
+                                {% if scan.matched_product %}
+                                    <span class="fw-semibold text-white">{{ scan.matched_product.product_name }}</span>
+                                    <br><small class="text-muted">{{ scan.matched_product.brand }}</small>
+                                {% else %}
+                                    <span class="text-muted fst-italic">No match found</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if scan.matched_product %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                        {{ scan.matched_product.category }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-semibold font-monospace
+                                    {% if scan.assessment_status == 'HIGH_SIMILARITY' %}text-success
+                                    {% elif scan.assessment_status == 'MODERATE_SIMILARITY' %}text-warning
+                                    {% elif scan.assessment_status == 'LOW_SIMILARITY' %}text-danger
+                                    {% else %}text-secondary{% endif %}">
+                                    {{ (scan.similarity_score * 100) | round(1) }}%
+                                </span>
+                            </td>
+                            <td>
+                                {% set s = scan.assessment_status %}
+                                {% if s == 'HIGH_SIMILARITY' %}
+                                    <span class="badge badge-high rounded-pill px-3">High</span>
+                                {% elif s == 'MODERATE_SIMILARITY' %}
+                                    <span class="badge badge-moderate rounded-pill px-3">Moderate</span>
+                                {% elif s == 'LOW_SIMILARITY' %}
+                                    <span class="badge badge-low rounded-pill px-3">Low</span>
+                                {% else %}
+                                    <span class="badge badge-insufficient rounded-pill px-3">Insufficient</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">
+                                {{ scan.scanned_at.strftime('%d %b %Y') if scan.scanned_at else '—' }}
+                                <br>
+                                <small class="text-secondary">{{ scan.scanned_at.strftime('%H:%M') if scan.scanned_at else '' }}</small>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('scan.view_result', scan_id=scan.id) }}"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox d-block mb-3"></i>
+                <h6 class="text-muted mb-2">No scans yet</h6>
+                <p class="text-secondary small mb-3">
+                    You haven't performed any product verification scans.
+                    Start by scanning a product's packaging image.
+                </p>
+                <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric text-navy fw-semibold">
+                    <i class="bi bi-qr-code-scan me-2"></i>Scan Your First Product
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+</div><!-- /#dashboard-content -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- Dashboard Charts & Live Stats -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+<style>
+/* Quick 5-column layout helper (Bootstrap doesn't include .col-lg-2-4) */
+@media (min-width: 992px) {
+    .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }
+}
+</style>
+{% endblock %}

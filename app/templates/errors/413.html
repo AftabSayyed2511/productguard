@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}File Too Large – 413{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card card-custom p-5 my-5">
+                <i class="bi bi-file-earmark-x text-warning fs-1 mb-3"></i>
+                <h1 class="display-4 fw-bold text-white mono mb-2">413</h1>
+                <h4 class="text-white mb-3">Uploaded File Exceeds Limit</h4>
+                <p class="text-secondary mb-4">The uploaded image exceeds the maximum permitted payload size of 5 MB. Please compress or crop your image and retry.</p>
+                <a href="javascript:history.back()" class="btn btn-electric px-4 py-2">
+                    <i class="bi bi-arrow-left me-2"></i>Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card card-custom p-4 p-md-5 shadow-lg border-electric-subtle">
+                <!-- Header with Avatar -->
+                <div class="d-flex align-items-center gap-4 mb-4 border-bottom border-secondary pb-4">
+                    <div class="avatar-lg bg-electric text-navy rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2" style="width: 72px; height: 72px;">
+                        {{ current_user.full_name[0] | upper }}
+                    </div>
+                    <div>
+                        <h3 class="fw-bold text-white mb-1">{{ current_user.full_name }}</h3>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-secondary small">@{{ current_user.username }}</span>
+                            <span class="badge {% if current_user.is_admin() %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                                {{ current_user.role | upper }}
+                            </span>
+                            <span class="text-muted small">&bull; Member since {{ current_user.created_at.strftime('%b %Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Update Form -->
+                <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <h5 class="text-white fw-bold mb-3"><i class="bi bi-person-gear text-electric me-2"></i> Account Details</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            {{ form.full_name.label(class="form-label") }}
+                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                            {% for error in form.full_name.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <h5 class="text-white fw-bold mb-3 border-top border-secondary pt-4">
+                        <i class="bi bi-shield-lock text-electric me-2"></i> Security & Password
+                    </h5>
+                    <div class="mb-3">
+                        {{ form.current_password.label(class="form-label") }}
+                        {{ form.current_password(class="form-control" + (" is-invalid" if form.current_password.errors else ""), placeholder="Required only if changing password") }}
+                        {% for error in form.current_password.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            {{ form.new_password.label(class="form-label") }}
+                            {{ form.new_password(class="form-control" + (" is-invalid" if form.new_password.errors else ""), placeholder="Leave blank to keep unchanged") }}
+                            {% for error in form.new_password.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            {{ form.confirm_new_password.label(class="form-label") }}
+                            {{ form.confirm_new_password(class="form-control" + (" is-invalid" if form.confirm_new_password.errors else ""), placeholder="Confirm new password") }}
+                            {% for error in form.confirm_new_password.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-electric px-4 fw-semibold">
+                            <i class="bi bi-check-lg me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

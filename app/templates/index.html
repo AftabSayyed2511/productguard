@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section with 3D Holographic Core -->
+<section class="hero-section py-5 text-center text-lg-start">
+    <div class="container py-lg-4">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-7">
+                <div class="hero-badge mb-3">
+                    <span class="spinner-grow spinner-grow-sm text-electric me-1" style="width: 9px; height: 9px;"></span>
+                    <span>Deep Learning Vision Backbone &bull; MobileNetV2</span>
+                </div>
+                <h1 class="hero-title mb-3">
+                    <span class="text-white">Detect Counterfeits.</span><br>
+                    <span class="text-gradient">Verify Authenticity.</span>
+                </h1>
+                <p class="lead text-secondary mb-4 pe-lg-4" style="font-size: 1.15rem; line-height: 1.6;">
+                    ProductGuard is an AI-powered visual packaging verification platform. By extracting 1,280-dimensional deep feature embeddings and comparing them against verified manufacturer reference standards, it identifies subtle packaging discrepancies and potential counterfeits in real time.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric btn-lg px-4 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-qr-code-scan"></i> Launch Product Scanner
+                    </a>
+                    <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-electric btn-lg px-4">
+                        <i class="bi bi-speedometer2 me-1"></i> My Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-electric btn-lg px-4 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check"></i> Get Started Free
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4">
+                        Sign In
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('main.about') }}" class="btn btn-outline-secondary btn-lg px-4">
+                        View Methodology
+                    </a>
+                </div>
+
+                <!-- 3D Stat Counters -->
+                <div class="row g-3 mt-4 pt-3 border-top border-secondary-subtle">
+                    <div class="col-4">
+                        <div class="fw-bold text-white fs-4 font-monospace">1,280</div>
+                        <small class="text-secondary" style="font-size: 0.78rem;">Deep Feature Vector Size</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold text-electric fs-4 font-monospace">&lt; 250ms</div>
+                        <small class="text-secondary" style="font-size: 0.78rem;">Average Inference Speed</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold fs-4 font-monospace" style="color: #10B981;">5+</div>
+                        <small class="text-secondary" style="font-size: 0.78rem;">Retail Categories</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3D Holographic Stage & Verification Card -->
+            <div class="col-lg-5">
+                <div class="card card-custom p-4 shadow-lg border-electric">
+                    <!-- 3D Hologram Floating Animation Stage -->
+                    <div class="hologram-stage mb-3">
+                        <div class="hologram-ring ring-outer"></div>
+                        <div class="hologram-ring ring-middle"></div>
+                        <div class="hologram-ring ring-inner"></div>
+
+                        <!-- 3D Floating Chips -->
+                        <div class="floating-chip chip-top-left">
+                            <i class="bi bi-cpu text-electric me-1"></i> 1,280-D Tensor
+                        </div>
+                        <div class="floating-chip chip-bottom-right">
+                            <i class="bi bi-shield-check text-success me-1"></i> L2 Normalized
+                        </div>
+
+                        <!-- 3D Central Floating Shield Core -->
+                        <div class="hologram-core">
+                            <i class="bi bi-shield-lock-fill core-shield-icon"></i>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Specs -->
+                    <div class="p-3 rounded mb-3 bg-navy border border-secondary-subtle">
+                        <div class="d-flex justify-content-between small text-secondary mb-2">
+                            <span>Feature Backbone</span>
+                            <span class="text-white fw-semibold font-monospace">MobileNetV2 (ImageNet)</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-secondary mb-2">
+                            <span>Comparison Distance</span>
+                            <span class="text-white fw-semibold font-monospace">L2 Cosine Similarity</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-secondary">
+                            <span>Input Resolution</span>
+                            <span class="text-white fw-semibold font-monospace">224 &times; 224 &times; 3 RGB</span>
+                        </div>
+                    </div>
+
+                    <!-- Calibrated Decision Boundaries -->
+                    <div class="p-3 rounded bg-navy border border-secondary-subtle mb-3">
+                        <h6 class="text-white small fw-bold mb-2">
+                            <i class="bi bi-sliders text-electric me-1"></i> Calibrated Decision Boundaries
+                        </h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge badge-similarity-high rounded-pill px-3">High Similarity</span>
+                                <span class="mono text-white fw-semibold">Score &ge; 82%</span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge badge-similarity-moderate rounded-pill px-3">Moderate Similarity</span>
+                                <span class="mono text-white fw-semibold">65% &le; Score &lt; 82%</span>
+                            </li>
+                            <li class="d-flex justify-content-between align-items-center">
+                                <span class="badge badge-similarity-low rounded-pill px-3">Low Similarity</span>
+                                <span class="mono text-white fw-semibold">Score &lt; 65%</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a href="{{ url_for('scan.scan_page') }}" class="btn btn-outline-electric w-100 fw-semibold">
+                        <i class="bi bi-camera me-1"></i> Try Live Verification Scan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Supported Categories Section with 3D Interactive Tilt Cards -->
+<section class="py-5">
+    <div class="container py-3">
+        <div class="text-center mb-5">
+            <h6 class="text-electric text-uppercase fw-bold tracking-wide">Verification Scope</h6>
+            <h2 class="fw-bold text-white fs-2">Supported Product Categories</h2>
+            <p class="text-secondary">Extensible computer vision comparison across high-risk counterfeit retail sectors.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4 col-lg-2-4 col-sm-6">
+                <div class="card card-custom card-3d p-4 text-center h-100">
+                    <div class="feature-icon-wrapper mx-auto">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Electronics</h5>
+                    <p class="small text-secondary mb-0">Smartphones, accessories, chargers, serialized packaging, retail boxes.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-2-4 col-sm-6">
+                <div class="card card-custom card-3d p-4 text-center h-100">
+                    <div class="feature-icon-wrapper mx-auto">
+                        <i class="bi bi-flower1"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Cosmetics</h5>
+                    <p class="small text-secondary mb-0">Skincare serums, luxury perfumes, foundation bottles, seal typography.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-2-4 col-sm-6">
+                <div class="card card-custom card-3d p-4 text-center h-100">
+                    <div class="feature-icon-wrapper mx-auto">
+                        <i class="bi bi-tag"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Clothing</h5>
+                    <p class="small text-secondary mb-0">Designer labels, embroidered insignias, swing tags, barcodes.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-2-4 col-sm-6">
+                <div class="card card-custom card-3d p-4 text-center h-100">
+                    <div class="feature-icon-wrapper mx-auto">
+                        <i class="bi bi-heart-pulse"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Personal Care</h5>
+                    <p class="small text-secondary mb-0">Shampoos, dental care, lotions, dispenser packaging features.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-2-4 col-sm-6">
+                <div class="card card-custom card-3d p-4 text-center h-100">
+                    <div class="feature-icon-wrapper mx-auto">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Packaged Goods</h5>
+                    <p class="small text-secondary mb-0">FMCG goods, nutritional supplements, sealed cartons, tamper labels.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section with 3D Stage Cards -->
+<section class="py-5 bg-navy border-top border-bottom border-secondary-subtle">
+    <div class="container py-3">
+        <div class="text-center mb-5">
+            <h6 class="text-electric text-uppercase fw-bold tracking-wide">Verification Workflow</h6>
+            <h2 class="fw-bold text-white fs-2">How ProductGuard Works</h2>
+            <p class="text-secondary">End-to-end computer vision pipeline from capture to quantitative similarity assessment.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom card-3d p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 text-secondary mono fw-bold fs-4">01</div>
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-camera"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Image Acquisition</h5>
+                    <p class="small text-secondary mb-0">User uploads an actual packaging photograph. File integrity and genuine MIME content are validated server-side.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom card-3d p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 text-secondary mono fw-bold fs-4">02</div>
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Feature Extraction</h5>
+                    <p class="small text-secondary mb-0">The image is preprocessed and passed through MobileNetV2 to extract a high-dimensional 1,280-D vector representation.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom card-3d p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 text-secondary mono fw-bold fs-4">03</div>
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-intersect"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Cosine Distance</h5>
+                    <p class="small text-secondary mb-0">Feature vectors are normalized and compared against verified reference embeddings via vectorized cosine similarity.</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom card-3d p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 p-3 text-secondary mono fw-bold fs-4">04</div>
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-file-earmark-check"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Assessment Report</h5>
+                    <p class="small text-secondary mb-0">Displays matched genuine reference, similarity percentage, processing duration, and verification recommendation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-5 text-center">
+    <div class="container py-4">
+        <div class="card card-custom card-3d p-5 border-electric shadow-lg">
+            <h2 class="fw-bold text-white fs-2 mb-3">Ready to Verify a Product?</h2>
+            <p class="text-secondary mb-4 mx-auto" style="max-width: 600px;">
+                Upload a product packaging image right now to perform real-time visual feature comparison against verified reference standards.
+            </p>
+            <div>
+                <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric btn-lg px-5 fw-bold">
+                    <i class="bi bi-qr-code-scan me-2"></i> Scan Product Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+@media (min-width: 992px) {
+    .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }
+}
+</style>
+{% endblock %}

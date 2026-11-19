@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Assessment Result – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header with Assessment Badge -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 border-bottom border-secondary pb-3">
+                <div>
+                    <span class="text-secondary small text-uppercase tracking-wide mono">Scan ID: {{ scan.id }}</span>
+                    <h2 class="fw-bold text-white mb-0 mt-1">Verification Assessment Report</h2>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if scan.assessment_status == 'HIGH_SIMILARITY' %}
+                        <span class="badge badge-similarity-high fs-6 px-3 py-2 fw-bold">
+                            <i class="bi bi-shield-check me-1"></i> HIGH VISUAL SIMILARITY
+                        </span>
+                    {% elif scan.assessment_status == 'MODERATE_SIMILARITY' %}
+                        <span class="badge badge-similarity-moderate fs-6 px-3 py-2 fw-bold">
+                            <i class="bi bi-shield-exclamation me-1"></i> MODERATE VISUAL SIMILARITY
+                        </span>
+                    {% elif scan.assessment_status == 'LOW_SIMILARITY' %}
+                        <span class="badge badge-similarity-low fs-6 px-3 py-2 fw-bold">
+                            <i class="bi bi-shield-x me-1"></i> LOW VISUAL SIMILARITY
+                        </span>
+                    {% else %}
+                        <span class="badge badge-similarity-insufficient fs-6 px-3 py-2 fw-bold">
+                            <i class="bi bi-question-circle me-1"></i> INSUFFICIENT DATA
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Side-by-Side Visual Comparison Cards -->
+            <div class="row g-4 mb-4">
+                <!-- User Uploaded Query -->
+                <div class="col-md-6">
+                    <div class="card image-comparison-card h-100 shadow">
+                        <div class="card-header bg-navy border-secondary py-3 d-flex justify-content-between align-items-center">
+                            <span class="text-white fw-bold"><i class="bi bi-camera text-electric me-2"></i> Uploaded Query Image</span>
+                            <span class="badge bg-secondary-subtle text-secondary small">Query</span>
+                        </div>
+                        <div class="image-preview-frame">
+                            <img src="{{ url_for('static', filename='uploads/' + scan.uploaded_image_path) }}" alt="Uploaded Query Image" class="img-fluid">
+                        </div>
+                        <div class="card-body bg-navy">
+                            <p class="small text-muted mb-0">
+                                Submitted for deep feature extraction via MobileNetV2 (1280-D vector representation).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Matched Verified Reference -->
+                <div class="col-md-6">
+                    <div class="card image-comparison-card h-100 shadow">
+                        <div class="card-header bg-navy border-secondary py-3 d-flex justify-content-between align-items-center">
+                            <span class="text-white fw-bold"><i class="bi bi-patch-check-fill text-success me-2"></i> Closest Verified Reference</span>
+                            <span class="badge bg-success-subtle text-success small">Verified Reference</span>
+                        </div>
+                        <div class="image-preview-frame">
+                            {% if scan.matched_reference %}
+                                <img src="{{ url_for('static', filename='uploads/' + scan.matched_reference.image_path) }}" alt="Matched Verified Reference" class="img-fluid">
+                            {% else %}
+                                <div class="text-center p-4 text-muted">
+                                    <i class="bi bi-image text-secondary fs-1 mb-2"></i>
+                                    <p class="small mb-0">No eligible verified reference image available for comparison.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body bg-navy">
+                            {% if scan.matched_product %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-white fw-bold">{{ scan.matched_product.brand }} {{ scan.matched_product.product_name }}</span>
+                                    <span class="badge bg-navy text-electric border border-electric-subtle">{{ scan.matched_product.category }}</span>
+                                </div>
+                            {% else %}
+                                <span class="text-muted small">No product candidate matched.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantitative Metrics and Details Grid -->
+            <div class="card card-custom p-4 shadow-sm mb-4">
+                <h5 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-bar-chart-line text-electric"></i> Quantitative Metric Breakdown
+                </h5>
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="bg-navy p-3 rounded border border-secondary text-center">
+                            <div class="text-muted small text-uppercase mb-1">Cosine Similarity</div>
+                            <div class="display-6 fw-bold mono {% if scan.similarity_score >= 0.82 %}text-success{% elif scan.similarity_score >= 0.65 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ "%.1f" | format(scan.similarity_score * 100) }}%
+                            </div>
+                            <span class="small text-muted mono">({{ "%.4f" | format(scan.similarity_score) }})</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="bg-navy p-3 rounded border border-secondary text-center">
+                            <div class="text-muted small text-uppercase mb-1">Inference Latency</div>
+                            <div class="display-6 fw-bold text-white mono">
+                                {{ scan.processing_time_ms }}<span class="fs-6 text-muted">ms</span>
+                            </div>
+                            <span class="small text-muted">End-to-End Latency</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="bg-navy p-3 rounded border border-secondary text-center">
+                            <div class="text-muted small text-uppercase mb-1">Product Category</div>
+                            <div class="h5 fw-bold text-electric mt-2 mb-1">
+                                {{ scan.matched_product.category if scan.matched_product else 'N/A' }}
+                            </div>
+                            <span class="small text-muted">Comparison Space</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="bg-navy p-3 rounded border border-secondary text-center">
+                            <div class="text-muted small text-uppercase mb-1">Timestamp</div>
+                            <div class="h6 fw-semibold text-white mt-2 mb-1">
+                                {{ scan.scanned_at.strftime('%Y-%m-%d') }}
+                            </div>
+                            <span class="small text-muted mono">{{ scan.scanned_at.strftime('%H:%M:%S UTC') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assessment Interpretation Text -->
+                <div class="mt-4 p-3 bg-navy rounded border border-secondary">
+                    <h6 class="text-white fw-bold mb-2"><i class="bi bi-info-circle text-electric me-1"></i> Technical Assessment Summary</h6>
+                    {% if scan.assessment_status == 'HIGH_SIMILARITY' %}
+                        <p class="text-secondary small mb-0">
+                            The uploaded packaging features exhibit high quantitative alignment with the verified manufacturer standard (<span class="mono text-success fw-bold">{{ "%.1f" | format(scan.similarity_score * 100) }}%</span>). Font positioning, primary logo geometry, and aspect ratios closely reflect genuine product specifications.
+                        </p>
+                    {% elif scan.assessment_status == 'MODERATE_SIMILARITY' %}
+                        <p class="text-secondary small mb-0">
+                            The visual packaging indicates structural resemblance to the verified reference (<span class="mono text-warning fw-bold">{{ "%.1f" | format(scan.similarity_score * 100) }}%</span>), but measurable variances exist in typography, color hues, or packaging revisions. Secondary inspection of serial numbers, seals, and batch stamps is recommended.
+                        </p>
+                    {% elif scan.assessment_status == 'LOW_SIMILARITY' %}
+                        <p class="text-secondary small mb-0">
+                            The uploaded image diverges significantly from verified manufacturer templates (<span class="mono text-danger fw-bold">{{ "%.1f" | format(scan.similarity_score * 100) }}%</span>). Key visual markers (logos, aspect ratios, background typography) do not match genuine samples. High risk of counterfeit packaging.
+                        </p>
+                    {% else %}
+                        <p class="text-secondary small mb-0">
+                            Insufficient verified reference data available. No reliable comparison could be established against verified manufacturer packaging in this category.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mandatory Scientific Disclaimer Alert -->
+            <div class="alert alert-warning bg-navy border-warning p-4 shadow-sm mb-4">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="bi bi-shield-exclamation text-warning fs-3 mt-1"></i>
+                    <div>
+                        <h6 class="fw-bold text-white mb-1">Crucial Scientific Verification Notice</h6>
+                        <p class="text-secondary small mb-0">
+                            Visual similarity is <strong>not equivalent to chemical, pharmacological, or electronic authenticity</strong>. Counterfeiters may reuse genuine containers, and authentic packaging can experience slight color variations from regional batch differences or ambient lighting. Use this assessment as an advisory tool alongside physical security audits.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons Footer -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric px-4 py-2 fw-semibold">
+                    <i class="bi bi-qr-code-scan me-2"></i> Scan Another Product
+                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('scan.history') }}" class="btn btn-outline-light px-3 py-2">
+                        <i class="bi bi-clock-history me-1"></i> View Scan History
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary px-3 py-2" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

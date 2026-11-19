@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumbs / Back link -->
+            <div class="mb-3">
+                <a href="{{ url_for('admin.list_products') }}" class="text-secondary text-decoration-none small">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Product Repository
+                </a>
+            </div>
+
+            <div class="card card-custom p-4 p-md-5 shadow-lg border-electric-subtle">
+                <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-secondary pb-3">
+                    <div class="feature-icon-wrapper mb-0">
+                        <i class="bi {% if is_edit %}bi-pencil-square{% else %}bi-plus-circle{% endif %}"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold text-white mb-0">{{ title }}</h3>
+                        <p class="text-secondary small mb-0">
+                            {% if is_edit %}Modify packaging metadata and specifications.{% else %}Ingest genuine manufacturer product specifications and verified reference imagery.{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-3 mb-3">
+                        <!-- Product Name -->
+                        <div class="col-md-7">
+                            {{ form.product_name.label(class="form-label") }}
+                            {{ form.product_name(class="form-control" + (" is-invalid" if form.product_name.errors else ""), placeholder="e.g. Galaxy S25 Ultra") }}
+                            {% for error in form.product_name.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="col-md-5">
+                            {{ form.brand.label(class="form-label") }}
+                            {{ form.brand(class="form-control" + (" is-invalid" if form.brand.errors else ""), placeholder="e.g. Samsung") }}
+                            {% for error in form.brand.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <!-- Category -->
+                        <div class="col-md-6">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            {% for error in form.category.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- SKU / UPC -->
+                        <div class="col-md-6">
+                            {{ form.sku_or_upc.label(class="form-label") }}
+                            {{ form.sku_or_upc(class="form-control" + (" is-invalid" if form.sku_or_upc.errors else ""), placeholder="e.g. 8806091234567") }}
+                            {% for error in form.sku_or_upc.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="3", placeholder="Enter official packaging details, box finish, hologram tags, or batch information...") }}
+                        {% for error in form.description.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {% if not is_edit %}
+                    <!-- Multi-Image Reference Upload Section -->
+                    <div class="p-3 bg-navy rounded border border-secondary mb-4">
+                        <h6 class="text-white fw-bold mb-2">
+                            <i class="bi bi-images text-electric me-1"></i> Initial Reference Packaging Images
+                        </h6>
+                        <p class="text-secondary small mb-3">
+                            You may upload one or multiple genuine packaging photographs now (or attach more multi-angle views later).
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label text-secondary small">Select Images (JPEG / PNG)</label>
+                                <input type="file" name="images" multiple class="form-control" accept=".jpg, .jpeg, .png">
+                            </div>
+                            <div class="col-md-5">
+                                {{ form.angle_or_view.label(class="form-label text-secondary small") }}
+                                {{ form.angle_or_view(class="form-select") }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('admin.list_products') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-electric px-4 fw-semibold">
+                            <i class="bi bi-check-lg me-1"></i> Save Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

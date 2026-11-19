@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}User Management – {{ APP_NAME }} Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-header {
+    background: linear-gradient(135deg, #070D1E 0%, #0B1528 55%, #102244 100%);
+    border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+    padding: 2.5rem 0 2rem;
+}
+.admin-nav-pill {
+    padding: 0.5rem 1.25rem;
+    border-radius: 30px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    color: #94a3b8;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-nav-pill:hover, .admin-nav-pill.active {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.card-admin {
+    background: rgba(11, 21, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.user-table th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06) !important;
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+}
+.user-table td {
+    color: #cbd5e1;
+    border-color: rgba(255,255,255,0.05) !important;
+    vertical-align: middle;
+    padding: 0.85rem 1rem;
+    font-size: 0.875rem;
+}
+.user-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.avatar-initial {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header & Navigation -->
+<section class="admin-header">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1 fw-bold text-uppercase mb-2">
+                    <i class="bi bi-people me-1"></i> Access Control
+                </span>
+                <h1 class="fw-bold text-white fs-3 mb-1">User Account Management</h1>
+                <p class="text-secondary small mb-0">Control platform access, grant administrative credentials, and manage account statuses.</p>
+            </div>
+            <div class="text-secondary small">
+                Total Registered: <span class="fw-bold text-white">{{ users | length }}</span> accounts
+            </div>
+        </div>
+
+        <!-- Sub-Navigation Pills -->
+        <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+            <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-pill">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard Overview
+            </a>
+            <a href="{{ url_for('admin.list_products') }}" class="admin-nav-pill">
+                <i class="bi bi-boxes me-1"></i> Products &amp; References
+            </a>
+            <a href="{{ url_for('admin.list_users') }}" class="admin-nav-pill active">
+                <i class="bi bi-people me-1"></i> User Management
+            </a>
+            <a href="{{ url_for('admin.analytics') }}" class="admin-nav-pill">
+                <i class="bi bi-graph-up me-1"></i> System Analytics &amp; Logs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Filter & Search Bar -->
+<section class="container py-4">
+    <div class="card-admin mb-4">
+        <form method="GET" action="{{ url_for('admin.list_users') }}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-navy border-secondary text-secondary">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control" placeholder="Search by name, username, or email…" value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="role" class="form-select">
+                    <option value="">All Roles</option>
+                    <option value="user" {% if role_filter == 'user' %}selected{% endif %}>Standard Users</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrators</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Suspended Only</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-electric text-navy fw-semibold w-100">
+                    Filter
+                </button>
+                {% if search_query or role_filter or status_filter %}
+                <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary" title="Reset filters">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card-admin">
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table user-table mb-0">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Scans</th>
+                        <th>Registered</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-initial {% if u.is_admin() %}bg-warning text-dark{% else %}bg-electric text-navy{% endif %}">
+                                    {{ u.full_name[0] | upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-white">
+                                        {{ u.full_name }}
+                                        {% if u.id == current_user.id %}
+                                            <span class="badge bg-electric text-navy ms-1" style="font-size: 0.68rem;">You</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-secondary">@{{ u.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="font-monospace small">{{ u.email }}</span>
+                        </td>
+                        <td>
+                            {% if u.role == 'admin' %}
+                                <span class="badge bg-warning text-dark fw-bold">Admin</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="font-monospace text-electric fw-semibold">{{ u.scans.count() }}</span>
+                        </td>
+                        <td class="text-secondary small">
+                            {{ u.created_at.strftime('%d %b %Y') }}
+                        </td>
+                        <td class="text-end">
+                            {% if u.id != current_user.id %}
+                            <div class="btn-group btn-group-sm">
+                                <!-- Role toggle dropdown -->
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    Role
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                                    <li>
+                                        <form method="POST" action="{{ url_for('admin.change_user_role', user_id=u.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="role" value="admin">
+                                            <button type="submit" class="dropdown-item {% if u.role == 'admin' %}active{% endif %}">
+                                                <i class="bi bi-shield-lock me-2 text-warning"></i>Admin
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{{ url_for('admin.change_user_role', user_id=u.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="role" value="user">
+                                            <button type="submit" class="dropdown-item {% if u.role == 'user' %}active{% endif %}">
+                                                <i class="bi bi-person me-2 text-secondary"></i>User
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+
+                                <!-- Active/Suspend toggle -->
+                                <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to {% if u.is_active %}suspend{% else %}activate{% endif %} {{ u.username }}?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if u.is_active %}
+                                        <button type="submit" class="btn btn-outline-danger" title="Suspend account">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-outline-success" title="Activate account">
+                                            <i class="bi bi-person-check"></i>
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                            {% else %}
+                            <span class="text-secondary small fst-italic">Protected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-secondary">
+            <i class="bi bi-people fs-1 d-block mb-3 text-muted"></i>
+            <h6>No user accounts found</h6>
+            <p class="small mb-0">Try adjusting your search query or filters.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

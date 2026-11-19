@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}System Analytics &amp; Security Logs – {{ APP_NAME }} Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-header {
+    background: linear-gradient(135deg, #070D1E 0%, #0B1528 55%, #102244 100%);
+    border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+    padding: 2.5rem 0 2rem;
+}
+.admin-nav-pill {
+    padding: 0.5rem 1.25rem;
+    border-radius: 30px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    color: #94a3b8;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-nav-pill:hover, .admin-nav-pill.active {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.card-admin {
+    background: rgba(11, 21, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.audit-table th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06) !important;
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+}
+.audit-table td {
+    color: #cbd5e1;
+    border-color: rgba(255,255,255,0.05) !important;
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+}
+.audit-table tr:hover td { background: rgba(255,255,255,0.02); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header & Navigation -->
+<section class="admin-header">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1 fw-bold text-uppercase mb-2">
+                    <i class="bi bi-graph-up me-1"></i> System Analytics &amp; Compliance
+                </span>
+                <h1 class="fw-bold text-white fs-3 mb-1">Platform Telemetry &amp; Audit Logs</h1>
+                <p class="text-secondary small mb-0">Live computer vision pipeline telemetry, category distributions, and administrative security audit trail.</p>
+            </div>
+            <span class="badge bg-secondary-subtle text-light border border-secondary px-3 py-2">
+                <i class="bi bi-clock me-1 text-electric"></i> Server UTC: {{ stats.daily_scans.keys() | list | last or 'Live' }}
+            </span>
+        </div>
+
+        <!-- Sub-Navigation Pills -->
+        <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+            <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-pill">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard Overview
+            </a>
+            <a href="{{ url_for('admin.list_products') }}" class="admin-nav-pill">
+                <i class="bi bi-boxes me-1"></i> Products &amp; References
+            </a>
+            <a href="{{ url_for('admin.list_users') }}" class="admin-nav-pill">
+                <i class="bi bi-people me-1"></i> User Management
+            </a>
+            <a href="{{ url_for('admin.analytics') }}" class="admin-nav-pill active">
+                <i class="bi bi-graph-up me-1"></i> System Analytics &amp; Logs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     ANALYTICS CHARTS
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="container py-4">
+    <div class="row g-4">
+        <!-- 30-Day Global Scan Activity -->
+        <div class="col-lg-8">
+            <div class="card-admin h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase text-secondary fw-bold small mb-0 tracking-wide">
+                        <i class="bi bi-activity text-electric me-2"></i>Global Verification Throughput (30 Days)
+                    </h6>
+                    <span class="badge bg-electric text-navy fw-bold">{{ stats.total_scans }} Total Scans</span>
+                </div>
+                <div style="height: 250px;">
+                    <canvas id="adminTimelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Outcome Donut -->
+        <div class="col-lg-4">
+            <div class="card-admin h-100">
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3 tracking-wide">
+                    <i class="bi bi-pie-chart text-electric me-2"></i>Status Ratios
+                </h6>
+                <div style="height: 250px;">
+                    <canvas id="adminOutcomeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products vs Scans Category Comparison -->
+        <div class="col-12">
+            <div class="card-admin">
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3 tracking-wide">
+                    <i class="bi bi-bar-chart text-electric me-2"></i>Category Inventory vs Verification Demand
+                </h6>
+                <div style="height: 220px;">
+                    <canvas id="adminCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     AI PIPELINE OPERATIONAL SPECIFICATIONS
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="container pb-4">
+    <div class="card-admin">
+        <h6 class="text-uppercase text-secondary fw-bold small mb-3 tracking-wide">
+            <i class="bi bi-cpu text-warning me-2"></i>Active AI Model &amp; Feature Vector Specifications
+        </h6>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="p-3 rounded bg-navy border border-secondary-subtle">
+                    <div class="text-secondary small">Base Architecture</div>
+                    <div class="text-white fw-bold mt-1">MobileNetV2</div>
+                    <small class="text-muted">Pretrained on ImageNet-1K</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded bg-navy border border-secondary-subtle">
+                    <div class="text-secondary small">Embedding Size</div>
+                    <div class="text-white fw-bold mt-1 font-monospace">1,280 Float32</div>
+                    <small class="text-muted">Global Average Pooling Layer</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded bg-navy border border-secondary-subtle">
+                    <div class="text-secondary small">Distance Metric</div>
+                    <div class="text-white fw-bold mt-1">Cosine Similarity</div>
+                    <small class="text-muted">L2-normalized dot product</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded bg-navy border border-secondary-subtle">
+                    <div class="text-secondary small">Average Scan Latency</div>
+                    <div class="text-electric fw-bold mt-1 font-monospace">{{ stats.avg_latency_ms }} ms</div>
+                    <small class="text-muted">End-to-end inference</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     ADMIN AUDIT TRAIL
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="container pb-5">
+    <div class="card-admin">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="text-uppercase text-secondary fw-bold small mb-0 tracking-wide">
+                <i class="bi bi-shield-check text-warning me-2"></i>Administrative Audit Trail (Last 50 Events)
+            </h6>
+            <span class="badge bg-secondary-subtle text-secondary">{{ audit_logs | length }} Logged Events</span>
+        </div>
+
+        {% if audit_logs %}
+        <div class="table-responsive">
+            <table class="table audit-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Timestamp (UTC)</th>
+                        <th>Administrator</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td class="text-secondary small font-monospace">
+                            {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        <td>
+                            {% if log.admin %}
+                                <span class="text-white fw-semibold">{{ log.admin.username }}</span>
+                            {% else %}
+                                <span class="text-muted">System</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-navy border border-warning-subtle text-warning font-monospace" style="font-size: 0.72rem;">
+                                {{ log.action }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-light small">{{ log.details }}</span>
+                        </td>
+                        <td class="text-secondary small font-monospace">
+                            {{ log.ip_address or '—' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-secondary text-center py-4 small mb-0">No administrative events recorded yet.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const COLORS = {
+        electric: "#00D2FF",
+        navy: "#0B1528",
+        high: "#22c55e",
+        mod: "#f59e0b",
+        low: "#ef4444",
+        insuf: "#64748b",
+        muted: "#94a3b8",
+    };
+
+    // 1. Outcome Donut Chart
+    const outcomeCtx = document.getElementById("adminOutcomeChart");
+    if (outcomeCtx) {
+        new Chart(outcomeCtx, {
+            type: "doughnut",
+            data: {
+                labels: ["High Similarity", "Moderate", "Low", "Insufficient"],
+                datasets: [{
+                    data: [
+                        {{ stats.status_map['HIGH_SIMILARITY'] }},
+                        {{ stats.status_map['MODERATE_SIMILARITY'] }},
+                        {{ stats.status_map['LOW_SIMILARITY'] }},
+                        {{ stats.status_map['INSUFFICIENT_DATA'] }}
+                    ],
+                    backgroundColor: [COLORS.high, COLORS.mod, COLORS.low, COLORS.insuf],
+                    borderColor: COLORS.navy,
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "bottom", labels: { color: COLORS.muted, font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    // 2. Timeline Line Chart
+    const timelineCtx = document.getElementById("adminTimelineChart");
+    if (timelineCtx) {
+        const rawDaily = {{ stats.daily_scans | tojson }};
+        const labels = [];
+        const values = [];
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().split("T")[0];
+            labels.push(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+            values.push(rawDaily[key] || 0);
+        }
+
+        new Chart(timelineCtx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Scans",
+                    data: values,
+                    fill: true,
+                    borderColor: COLORS.electric,
+                    backgroundColor: "rgba(0, 210, 255, 0.08)",
+                    tension: 0.35,
+                    pointRadius: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: COLORS.muted, maxTicksLimit: 10 }, grid: { color: "rgba(255,255,255,0.05)" } },
+                    y: { beginAtZero: true, ticks: { color: COLORS.muted, stepSize: 1 }, grid: { color: "rgba(255,255,255,0.05)" } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // 3. Category Bar Chart
+    const catCtx = document.getElementById("adminCategoryChart");
+    if (catCtx) {
+        const prodCats = {{ stats.prod_category_map | tojson }};
+        const scanCats = {{ stats.scan_category_map | tojson }};
+        const allKeys = Array.from(new Set([...Object.keys(prodCats), ...Object.keys(scanCats), "Electronics", "Cosmetics", "Clothing", "Personal Care", "Packaged Goods"]));
+
+        new Chart(catCtx, {
+            type: "bar",
+            data: {
+                labels: allKeys,
+                datasets: [
+                    {
+                        label: "Verified Products In Catalog",
+                        data: allKeys.map(k => prodCats[k] || 0),
+                        backgroundColor: "rgba(16, 185, 129, 0.6)",
+                        borderColor: "#10b981",
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    },
+                    {
+                        label: "Verification Scans Received",
+                        data: allKeys.map(k => scanCats[k] || 0),
+                        backgroundColor: "rgba(0, 210, 255, 0.6)",
+                        borderColor: COLORS.electric,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: COLORS.muted }, grid: { color: "rgba(255,255,255,0.05)" } },
+                    y: { beginAtZero: true, ticks: { color: COLORS.muted, stepSize: 1 }, grid: { color: "rgba(255,255,255,0.05)" } }
+                },
+                plugins: {
+                    legend: { labels: { color: COLORS.muted } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

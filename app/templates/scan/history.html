@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Scan History – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold text-white mb-1">Personal Scan History</h2>
+            <p class="text-secondary small mb-0">Review all your previous visual packaging verification records and metrics.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric px-3 py-2 fw-semibold">
+                <i class="bi bi-qr-code-scan me-1"></i> New Scan
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="card card-custom p-3 mb-4 shadow-sm">
+        <form method="GET" action="{{ url_for('scan.history') }}" class="row g-2 align-items-center">
+            <!-- Search -->
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-navy border-secondary text-secondary">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control" placeholder="Search by product name or brand..." value="{{ search_query }}">
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="HIGH_SIMILARITY" {% if current_status == 'HIGH_SIMILARITY' %}selected{% endif %}>High</option>
+                    <option value="MODERATE_SIMILARITY" {% if current_status == 'MODERATE_SIMILARITY' %}selected{% endif %}>Moderate</option>
+                    <option value="LOW_SIMILARITY" {% if current_status == 'LOW_SIMILARITY' %}selected{% endif %}>Low</option>
+                    <option value="INSUFFICIENT_DATA" {% if current_status == 'INSUFFICIENT_DATA' %}selected{% endif %}>Insufficient</option>
+                </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-electric w-100 fw-semibold">Filter</button>
+                {% if search_query or current_category or current_status %}
+                    <a href="{{ url_for('scan.history') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- History Table -->
+    {% if scans %}
+    <div class="card card-custom overflow-hidden shadow">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="bg-navy border-secondary">
+                    <tr class="text-secondary small text-uppercase">
+                        <th scope="col" style="width: 80px;">Image</th>
+                        <th scope="col">Matched Product</th>
+                        <th scope="col">Category</th>
+                        <th scope="col" class="text-center">Similarity</th>
+                        <th scope="col">Assessment</th>
+                        <th scope="col">Date / Time</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr>
+                        <!-- Query Thumbnail -->
+                        <td>
+                            <div class="rounded overflow-hidden bg-black d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <img src="{{ url_for('static', filename='uploads/' + scan.uploaded_image_path) }}" alt="Query Thumbnail" class="img-fluid" style="max-height: 100%; object-fit: contain;">
+                            </div>
+                        </td>
+
+                        <!-- Product Information -->
+                        <td>
+                            {% if scan.matched_product %}
+                                <div class="fw-bold text-white">{{ scan.matched_product.brand }} {{ scan.matched_product.product_name }}</div>
+                                <span class="small text-muted mono">SKU: {{ scan.matched_product.sku_or_upc or 'N/A' }}</span>
+                            {% else %}
+                                <span class="text-muted fst-italic">No product matched</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Category -->
+                        <td>
+                            <span class="badge bg-navy text-electric border border-electric-subtle">
+                                {{ scan.matched_product.category if scan.matched_product else 'General' }}
+                            </span>
+                        </td>
+
+                        <!-- Similarity Score -->
+                        <td class="text-center">
+                            <span class="fs-5 fw-bold mono {% if scan.similarity_score >= 0.82 %}text-success{% elif scan.similarity_score >= 0.65 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ "%.1f" | format(scan.similarity_score * 100) }}%
+                            </span>
+                        </td>
+
+                        <!-- Assessment Status Badge -->
+                        <td>
+                            {% if scan.assessment_status == 'HIGH_SIMILARITY' %}
+                                <span class="badge badge-similarity-high">High Similarity</span>
+                            {% elif scan.assessment_status == 'MODERATE_SIMILARITY' %}
+                                <span class="badge badge-similarity-moderate">Moderate</span>
+                            {% elif scan.assessment_status == 'LOW_SIMILARITY' %}
+                                <span class="badge badge-similarity-low">Low Similarity</span>
+                            {% else %}
+                                <span class="badge badge-similarity-insufficient">Insufficient Data</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Timestamp -->
+                        <td>
+                            <div class="text-white small">{{ scan.scanned_at.strftime('%Y-%m-%d') }}</div>
+                            <span class="text-muted small mono">{{ scan.scanned_at.strftime('%H:%M:%S') }}</span>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a href="{{ url_for('scan.view_result', scan_id=scan.id) }}" class="btn btn-sm btn-outline-electric" title="View Full Report">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+                                <form method="POST" action="{{ url_for('scan.delete_scan', scan_id=scan.id) }}" onsubmit="return confirm('Are you sure you want to remove this scan record?');" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Scan Record">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="card card-custom p-5 text-center my-4">
+        <div class="feature-icon-wrapper mx-auto mb-3">
+            <i class="bi bi-inbox text-muted"></i>
+        </div>
+        <h4 class="text-white fw-bold mb-2">No Scan Records Found</h4>
+        <p class="text-secondary small mb-4">
+            {% if search_query or current_category or current_status %}
+                No scans match your selected search or filter criteria. Try resetting filters.
+            {% else %}
+                You have not performed any product packaging scans yet. Launch your first verification scan now!
+            {% endif %}
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            {% if search_query or current_category or current_status %}
+                <a href="{{ url_for('scan.history') }}" class="btn btn-outline-secondary px-4">Clear Filters</a>
+            {% endif %}
+            <a href="{{ url_for('scan.scan_page') }}" class="btn btn-electric px-4 fw-semibold">
+                <i class="bi bi-qr-code-scan me-2"></i> Start First Scan
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}System Command Center – {{ APP_NAME }} Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Admin Dashboard Styles ────────────────────────────────────────────── */
+.admin-header {
+    background: linear-gradient(135deg, #070D1E 0%, #0B1528 55%, #102244 100%);
+    border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+    padding: 2.5rem 0 2rem;
+}
+.admin-nav-pill {
+    padding: 0.5rem 1.25rem;
+    border-radius: 30px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    color: #94a3b8;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-nav-pill:hover, .admin-nav-pill.active {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+/* ── KPI Cards ─────────────────────────────────────────────────────────── */
+.admin-kpi {
+    background: rgba(11, 21, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.4rem;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+}
+.admin-kpi:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 210, 255, 0.3);
+}
+.admin-kpi .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+}
+.admin-kpi .lbl {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-top: 0.35rem;
+}
+.admin-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+/* Accent icons */
+.kpi-users .admin-kpi-icon { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.kpi-prods .admin-kpi-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.kpi-refs  .admin-kpi-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.kpi-scans .admin-kpi-icon { background: rgba(0, 210, 255, 0.15);  color: #00D2FF; }
+.kpi-lat   .admin-kpi-icon { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+/* ── Table formatting ─────────────────────────────────────────────────── */
+.admin-table th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06) !important;
+    font-weight: 600;
+    padding: 0.9rem 1rem;
+}
+.admin-table td {
+    color: #cbd5e1;
+    border-color: rgba(255,255,255,0.05) !important;
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+    font-size: 0.86rem;
+}
+.admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.card-admin {
+    background: rgba(11, 21, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+/* Badge styles */
+.badge-high       { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.badge-moderate   { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);}
+.badge-low        { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.badge-insufficient{ background: rgba(100,116,139,0.15);color: #94a3b8;border: 1px solid rgba(100,116,139,0.3);}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════════
+     ADMIN HEADER & SUB-NAV
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="admin-header">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-warning text-dark px-3 py-1 fw-bold text-uppercase">
+                        <i class="bi bi-shield-lock me-1"></i> System Administration
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                        Live Metrics
+                    </span>
+                </div>
+                <h1 class="fw-bold text-white fs-3 mb-1">Administrative Control Center</h1>
+                <p class="text-secondary small mb-0">Platform overview, system integrity, model performance, and global audit stream.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.create_product') }}" class="btn btn-electric text-navy fw-semibold btn-sm px-3">
+                    <i class="bi bi-plus-circle me-1"></i> Add Product
+                </a>
+                <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-light btn-sm px-3">
+                    <i class="bi bi-people me-1"></i> Manage Users
+                </a>
+            </div>
+        </div>
+
+        <!-- Admin Sub-Navigation Pills -->
+        <div class="d-flex flex-wrap gap-2 pt-2 border-top border-secondary-subtle">
+            <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-pill active">
+                <i class="bi bi-speedometer2 me-1"></i> Dashboard Overview
+            </a>
+            <a href="{{ url_for('admin.list_products') }}" class="admin-nav-pill">
+                <i class="bi bi-boxes me-1"></i> Products &amp; References
+            </a>
+            <a href="{{ url_for('admin.list_users') }}" class="admin-nav-pill">
+                <i class="bi bi-people me-1"></i> User Management
+            </a>
+            <a href="{{ url_for('admin.analytics') }}" class="admin-nav-pill">
+                <i class="bi bi-graph-up me-1"></i> System Analytics &amp; Logs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     KPI METRICS ROW
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="container py-4">
+    <div class="row g-3">
+        <!-- Total Users -->
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <div class="admin-kpi kpi-users h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="val" id="admin-total-users">{{ stats.total_users }}</div>
+                        <div class="lbl">Registered Users</div>
+                        <small class="text-secondary" style="font-size: 0.72rem;">{{ stats.active_users }} active accounts</small>
+                    </div>
+                    <div class="admin-kpi-icon"><i class="bi bi-people-fill"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Products -->
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <div class="admin-kpi kpi-prods h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="val" id="admin-total-prods">{{ stats.total_products }}</div>
+                        <div class="lbl">Verified Products</div>
+                        <small class="text-secondary" style="font-size: 0.72rem;">Across 5 categories</small>
+                    </div>
+                    <div class="admin-kpi-icon"><i class="bi bi-box-seam-fill"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reference Images -->
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <div class="admin-kpi kpi-refs h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="val" id="admin-total-refs">{{ stats.total_reference_images }}</div>
+                        <div class="lbl">Reference Images</div>
+                        <small class="text-secondary" style="font-size: 0.72rem;">MobileNetV2 vectors</small>
+                    </div>
+                    <div class="admin-kpi-icon"><i class="bi bi-images"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Scans -->
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <div class="admin-kpi kpi-scans h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="val text-electric" id="admin-total-scans">{{ stats.total_scans }}</div>
+                        <div class="lbl">Total Scans Executed</div>
+                        <small class="text-secondary" style="font-size: 0.72rem;">Inference requests</small>
+                    </div>
+                    <div class="admin-kpi-icon"><i class="bi bi-qr-code-scan"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inference Latency -->
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <div class="admin-kpi kpi-lat h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="val" id="admin-avg-lat">{{ stats.avg_latency_ms }}<span style="font-size: 1rem; color: #94a3b8;">ms</span></div>
+                        <div class="lbl">Avg Processing Time</div>
+                        <small class="text-secondary" style="font-size: 0.72rem;">Extract + cosine match</small>
+                    </div>
+                    <div class="admin-kpi-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     STATUS DISTRIBUTION & ATTENTION ALERTS
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="container pb-4">
+    <div class="row g-4">
+        <!-- AI Inference Breakdown -->
+        <div class="col-lg-7">
+            <div class="card-admin h-100">
+                <h6 class="text-uppercase text-secondary fw-bold small mb-3 tracking-wide">
+                    <i class="bi bi-pie-chart text-electric me-2"></i>Global Verification Outcome Ratios
+                </h6>
+                <div class="row g-3 text-center">
+                    <div class="col-3">
+                        <div class="p-3 rounded bg-navy border border-success-subtle">
+                            <span class="fs-4 fw-bold text-success font-monospace">{{ stats.status_map['HIGH_SIMILARITY'] }}</span>
+                            <div class="text-secondary small mt-1" style="font-size: 0.75rem;">High Match</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-3 rounded bg-navy border border-warning-subtle">
+                            <span class="fs-4 fw-bold text-warning font-monospace">{{ stats.status_map['MODERATE_SIMILARITY'] }}</span>
+                            <div class="text-secondary small mt-1" style="font-size: 0.75rem;">Moderate</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-3 rounded bg-navy border border-danger-subtle">
+                            <span class="fs-4 fw-bold text-danger font-monospace">{{ stats.status_map['LOW_SIMILARITY'] }}</span>
+                            <div class="text-secondary small mt-1" style="font-size: 0.75rem;">Low Match</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-3 rounded bg-navy border border-secondary-subtle">
+                            <span class="fs-4 fw-bold text-muted font-monospace">{{ stats.status_map['INSUFFICIENT_DATA'] }}</span>
+                            <div class="text-secondary small mt-1" style="font-size: 0.75rem;">Insufficient</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model metadata banner -->
+                <div class="mt-4 p-3 rounded bg-navy border border-secondary-subtle d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-cpu text-electric fs-4"></i>
+                        <div>
+                            <div class="text-white fw-semibold small">Vision Backbone: MobileNetV2 (ImageNet)</div>
+                            <div class="text-secondary" style="font-size: 0.78rem;">Embedding Dimension: 1,280 Float32 &bull; Metric: Cosine Distance</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-success text-dark fw-bold px-3 py-1">Model Loaded &amp; Active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attention items: Products missing reference images -->
+        <div class="col-lg-5">
+            <div class="card-admin h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase text-secondary fw-bold small mb-0 tracking-wide">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>Reference Coverage Alerts
+                    </h6>
+                    <span class="badge bg-warning text-dark">{{ stats.products_needing_refs_count }} Needing Images</span>
+                </div>
+
+                {% if stats.products_needing_refs %}
+                <p class="text-secondary small mb-3">The following verified products do not yet have packaging reference images attached and cannot be matched:</p>
+                <div class="list-group list-group-flush border-0">
+                    {% for p in stats.products_needing_refs[:4] %}
+                    <div class="list-group-item bg-navy border-secondary-subtle px-3 py-2 d-flex justify-content-between align-items-center rounded mb-2">
+                        <div>
+                            <span class="text-white fw-semibold small">{{ p.product_name }}</span>
+                            <span class="text-secondary small ms-2">({{ p.brand }})</span>
+                        </div>
+                        <a href="{{ url_for('admin.view_product', product_id=p.id) }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.78rem;">
+                            Upload
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-secondary">
+                    <i class="bi bi-shield-check text-success fs-1 d-block mb-2"></i>
+                    <p class="small mb-0">Full coverage! All products currently have at least one verified reference image.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     RECENT SYSTEM SCANS & ADMIN AUDIT STREAM
+     ════════════════════════════════════════════════════════════════════════ -->
+<section class="container pb-5">
+    <div class="row g-4">
+        <!-- Recent Scans Across All Users -->
+        <div class="col-lg-7">
+            <div class="card-admin h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase text-secondary fw-bold small mb-0 tracking-wide">
+                        <i class="bi bi-clock-history text-electric me-2"></i>Global Scan Activity
+                    </h6>
+                </div>
+
+                {% if recent_scans %}
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Scan ID / Time</th>
+                                <th>User</th>
+                                <th>Matched Product</th>
+                                <th>Score</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in recent_scans %}
+                            <tr>
+                                <td>
+                                    <span class="font-monospace text-electric" style="font-size: 0.78rem;">{{ s.id[:8] }}…</span>
+                                    <br><small class="text-secondary">{{ s.scanned_at.strftime('%d %b %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    {% if s.user %}
+                                        <span class="text-white">{{ s.user.username }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Anonymous</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if s.matched_product %}
+                                        <span class="text-white">{{ s.matched_product.product_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted fst-italic">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="font-monospace fw-bold
+                                        {% if s.assessment_status == 'HIGH_SIMILARITY' %}text-success
+                                        {% elif s.assessment_status == 'MODERATE_SIMILARITY' %}text-warning
+                                        {% elif s.assessment_status == 'LOW_SIMILARITY' %}text-danger
+                                        {% else %}text-secondary{% endif %}">
+                                        {{ (s.similarity_score * 100) | round(1) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set st = s.assessment_status %}
+                                    {% if st == 'HIGH_SIMILARITY' %}
+                                        <span class="badge badge-high rounded-pill px-2">High</span>
+                                    {% elif st == 'MODERATE_SIMILARITY' %}
+                                        <span class="badge badge-moderate rounded-pill px-2">Mod</span>
+                                    {% elif st == 'LOW_SIMILARITY' %}
+                                        <span class="badge badge-low rounded-pill px-2">Low</span>
+                                    {% else %}
+                                        <span class="badge badge-insufficient rounded-pill px-2">Insuf</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-secondary text-center py-4 small mb-0">No verification scans executed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Admin Audit Activity -->
+        <div class="col-lg-5">
+            <div class="card-admin h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="text-uppercase text-secondary fw-bold small mb-0 tracking-wide">
+                        <i class="bi bi-journal-text text-warning me-2"></i>Security Audit Stream
+                    </h6>
+                    <a href="{{ url_for('admin.analytics') }}" class="btn btn-sm btn-outline-secondary text-muted py-0" style="font-size: 0.78rem;">
+                        View All
+                    </a>
+                </div>
+
+                {% if recent_activities %}
+                <div class="list-group list-group-flush border-0">
+                    {% for a in recent_activities %}
+                    <div class="list-group-item bg-transparent border-secondary-subtle px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-secondary-subtle text-warning border border-secondary-subtle font-monospace" style="font-size: 0.72rem;">
+                                {{ a.action }}
+                            </span>
+                            <small class="text-secondary" style="font-size: 0.75rem;">
+                                {{ a.created_at.strftime('%d %b %H:%M') }}
+                            </small>
+                        </div>
+                        <p class="text-light small mb-0 text-truncate">{{ a.details }}</p>
+                        <small class="text-secondary" style="font-size: 0.72rem;">
+                            by <span class="text-electric">{{ a.admin.username if a.admin else 'System' }}</span>
+                            {% if a.ip_address %}&bull; IP: {{ a.ip_address }}{% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-secondary text-center py-4 small mb-0">No audit activity recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+@media (min-width: 992px) {
+    .col-lg-2-4 { flex: 0 0 20%; max-width: 20%; }
+}
+</style>
+{% endblock %}

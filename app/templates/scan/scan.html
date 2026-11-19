@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}AI Packaging Scanner – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <span class="hero-badge mb-2">
+                    <i class="bi bi-cpu text-electric me-1"></i> Computer Vision Scanner
+                </span>
+                <h2 class="fw-bold text-white mb-2 fs-2">Scan Product Packaging</h2>
+                <p class="text-secondary" style="max-width: 620px; margin: 0 auto;">
+                    Upload an authentic photograph of the product packaging. MobileNetV2 will extract a 1,280-dimensional feature embedding and calculate cosine similarity against genuine manufacturer standards.
+                </p>
+            </div>
+
+            <!-- Scanner Glass Card -->
+            <div class="card card-custom p-4 p-md-5 shadow-lg border-electric mb-4">
+                <form id="scanForm" action="/api/scans" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Category Selector -->
+                    <div class="mb-4">
+                        <label for="categorySelect" class="form-label text-white fw-semibold">
+                            <i class="bi bi-tags text-electric me-1"></i> Target Product Category
+                        </label>
+                        <select class="form-select form-select-lg" id="categorySelect" name="category" required>
+                            <option value="" selected disabled>Choose a product category...</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-secondary small mt-2">
+                            <i class="bi bi-info-circle me-1 text-electric"></i> Constrains similarity search to verified reference packaging within this category.
+                        </div>
+                    </div>
+
+                    <!-- Drag and Drop Dropzone -->
+                    <div class="mb-4">
+                        <label class="form-label text-white fw-semibold">
+                            <i class="bi bi-image text-electric me-1"></i> Packaging Photograph
+                        </label>
+
+                        <div id="dropzone" class="dropzone-container">
+                            <div class="scan-line-animation" id="scanRadarLine"></div>
+                            <input type="file" id="fileInput" name="image" accept=".jpg, .jpeg, .png" class="d-none">
+
+                            <div id="dropzonePrompt">
+                                <div class="dropzone-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </div>
+                                <h5 class="text-white fw-bold mb-1 fs-5">Drag &amp; Drop Packaging Photo Here</h5>
+                                <p class="text-secondary small mb-3">or <span class="text-electric fw-semibold">click to browse</span> from your files</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <span class="badge bg-navy text-secondary border border-secondary">JPEG</span>
+                                    <span class="badge bg-navy text-secondary border border-secondary">JPG</span>
+                                    <span class="badge bg-navy text-secondary border border-secondary">PNG</span>
+                                    <span class="badge bg-navy text-secondary border border-secondary">Max 5 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Live Preview Container (Initially Hidden) -->
+                            <div id="previewContainer" class="d-none">
+                                <div class="image-preview-frame rounded border border-secondary mx-auto mb-3" style="max-width: 320px; background: #030712;">
+                                    <img id="imagePreview" src="" alt="Query Preview" class="img-fluid rounded">
+                                </div>
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <span id="fileName" class="text-white small mono"></span>
+                                    <span id="fileSize" class="badge bg-navy text-electric border border-electric mono"></span>
+                                    <button type="button" id="removeImageBtn" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash me-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="fileError" class="text-danger small mt-2 d-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Status Live Indicator -->
+                    <div id="scanStatus" class="alert alert-info bg-navy border-electric p-3 mb-4 d-none shadow-sm">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="spinner-border text-electric" role="status" style="width: 2rem; height: 2rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-0 fw-bold" id="statusTitle">Analyzing Packaging...</h6>
+                                <p class="text-secondary small mb-0" id="statusDetail">MobileNetV2 feature extraction in progress.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" id="submitScanBtn" class="btn btn-electric btn-lg py-3 fw-bold fs-6" disabled>
+                            <i class="bi bi-qr-code-scan me-2"></i> Execute AI Verification Scan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Best Practices Guide Card -->
+            <div class="card card-custom p-4 bg-navy border-secondary-subtle">
+                <h6 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-lightbulb text-warning"></i> Guidelines for High-Accuracy Scanning
+                </h6>
+                <div class="row g-3 small text-secondary">
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <div><strong class="text-white">Uniform Lighting:</strong> Avoid heavy flash glare or deep shadows across packaging surfaces.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <div><strong class="text-white">Frontal Focus:</strong> Center primary logos, typography, and product name text.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <div><strong class="text-white">High Resolution:</strong> Keep the packaging planar without acute angled distortions.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+{% endblock %}

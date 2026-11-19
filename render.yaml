@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: productguard
+    runtime: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: FLASK_CONFIG
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: UPLOAD_FOLDER
+        value: /app/app/static/uploads
+      - key: RATELIMIT_ENABLED
+        value: "True"
+      - key: SIMILARITY_THRESHOLD_HIGH
+        value: "0.82"
+      - key: SIMILARITY_THRESHOLD_MODERATE
+        value: "0.65"
+      - key: SIMILARITY_THRESHOLD_MINIMUM
+        value: "0.40"
+      - key: GUNICORN_WORKERS
+        value: "2"
+      - key: GUNICORN_THREADS
+        value: "2"
+      - key: GUNICORN_TIMEOUT
+        value: "120"
